@@ -19,7 +19,8 @@ keywords = [
   "qap",
   "ergm",
   "stergm",
-  "statistics"
+  "statistics",
+  "network-science"
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -32,6 +33,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 
 dependencies = [
@@ -47,13 +49,31 @@ dependencies = [
 plot = [
   "matplotlib>=3.7",
 ]
+test = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+]
 dev = [
   "pytest>=8.0",
   "pytest-cov>=5.0",
   "ruff>=0.5",
   "build>=1.2",
   "twine>=5.0",
+  "pre-commit>=3.7",
 ]
+docs = [
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+]
+notebooks = [
+  "jupyter>=1.0",
+  "ipykernel>=6.29",
+]
+
+[project.urls]
+Homepage = "https://github.com/HubertRonald/relationalstats"
+Repository = "https://github.com/HubertRonald/relationalstats"
+Issues = "https://github.com/HubertRonald/relationalstats/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/relationalstats"]
