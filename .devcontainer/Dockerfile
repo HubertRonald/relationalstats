@@ -9,17 +9,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     git \
-    graphviz \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
 
-COPY requirements-dev.txt requirements-test.txt requirements-docs.txt requirements-notebooks.txt ./
+COPY pyproject.toml README.md ./
+COPY src ./src
 
 RUN python -m pip install --upgrade pip && \
-    pip install -r requirements-dev.txt && \
-    pip install -r requirements-test.txt && \
-    pip install -r requirements-docs.txt && \
-    pip install -r requirements-notebooks.txt
+    python -m pip install -e ".[dev,test]"
 
 CMD ["bash"]

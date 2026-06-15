@@ -175,6 +175,25 @@ The devcontainer uses Python 3.12 and installs development, testing, documentati
 
 This is useful when the local operating system has older Python or system dependency constraints.
 
+### Default devcontainer
+
+The default devcontainer is intentionally lightweight.
+
+It installs only the package core plus development and test dependencies:
+
+```bash
+python -m pip install -e ".[dev,test]"
+
+Notebook, plotting, ML, documentation, and R-validation dependencies are not installed by default.
+
+Install them only when needed:
+
+python -m pip install -e ".[notebooks,plot]"
+python -m pip install -e ".[ml]"
+python -m pip install -e ".[docs]"
+python -m pip install -e ".[r]"
+```
+
 ## Quick usage
 
 Functional link prediction API:

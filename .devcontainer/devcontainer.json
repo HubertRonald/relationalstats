@@ -21,11 +21,10 @@
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "charliermarsh.ruff",
-        "ms-toolsai.jupyter"
+        "charliermarsh.ruff"
       ]
     }
   },
-  "postCreateCommand": "python -m pip install -e '.[dev,test,docs,notebooks]'",
+  "postCreateCommand": "python -m pip install -e '.[dev,test]'",
   "remoteUser": "root"
 }
