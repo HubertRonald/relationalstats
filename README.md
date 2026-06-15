@@ -1,11 +1,45 @@
-# relationalstats
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Package](https://img.shields.io/badge/package-pip--installable-informational)
-![License: MIT](https://img.shields.io/badge/license-MIT-green)
-![Status](https://img.shields.io/badge/status-alpha-orange)
-![NetworkX](https://img.shields.io/badge/networkx-supported-blueviolet)
-![Scientific Python](https://img.shields.io/badge/scientific-python-lightgrey)
+<p align="left">
+    <a href="https://www.python.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Python-3.10%2B-3670A0?style=flat-square&logo=python&logoColor=ffdd54" />
+    </a>
+    <a href="https://networkx.org/" target="_blank">
+        <img src="https://img.shields.io/badge/NetworkX-Graph%20Analysis-1f77b4?style=flat-square" />
+    </a>
+    <a href="https://numpy.org/" target="_blank">
+        <img src="https://img.shields.io/badge/NumPy-Arrays-013243?style=flat-square&logo=numpy&logoColor=white" />
+    </a>
+    <a href="https://pandas.pydata.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Pandas-DataFrames-150458?style=flat-square&logo=pandas&logoColor=white" />
+    </a>
+    <a href="https://scipy.org/" target="_blank">
+        <img src="https://img.shields.io/badge/SciPy-Sparse%20Matrix-8CAAE6?style=flat-square&logo=scipy&logoColor=white" />
+    </a>
+    <a href="https://scikit-learn.org/" target="_blank">
+        <img src="https://img.shields.io/badge/scikit--learn-ML%20Backend-F7931E?style=flat-square&logo=scikit-learn&logoColor=white" />
+    </a>
+    <a href="https://www.statsmodels.org/" target="_blank">
+        <img src="https://img.shields.io/badge/statsmodels-Statistical%20Models-4051B5?style=flat-square" />
+    </a>
+    <a href="https://docs.pytest.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Pytest-Testing-0A9EDC?style=flat-square&logo=pytest&logoColor=white" />
+    </a>
+    <a href="https://github.com/features/actions" target="_blank">
+        <img src="https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?style=flat-square&logo=githubactions&logoColor=white" />
+    </a>
+    <a href="https://packaging.python.org/" target="_blank">
+        <img src="https://img.shields.io/badge/Python%20Packaging-pyproject.toml-3775A9?style=flat-square&logo=pypi&logoColor=white" />
+    </a>
+    <a href="https://opensource.org/license/mit/" target="_blank">
+        <img src="https://img.shields.io/badge/License-MIT-success?style=flat-square" />
+    </a>
+    <img src="https://img.shields.io/badge/Status-Alpha-orange?style=flat-square" />
+    <br>
+    <img src="https://img.shields.io/github/commit-activity/t/HubertRonald/relationalstats?style=flat-square&color=dodgerblue" />
+</p>
+
+
+# relationalstats
 
 A practical Python toolkit for applied and statistical social network analysis, with research-grade documentation and transparent methodological boundaries.
 
