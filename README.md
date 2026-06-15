@@ -161,6 +161,18 @@ python -m pip install -e ".[dev,test]"
 pytest tests/unit/test_linkprediction.py -q
 ```
 
+```markdown
+## Build validation
+
+To validate the package build locally:
+
+```bash
+rm -rf dist build *.egg-info
+python -m pip install build twine
+python -m build
+python -m twine check "dist/*"
+```
+
 ## Devcontainer setup
 
 This repository includes a VS Code compatible devcontainer.
