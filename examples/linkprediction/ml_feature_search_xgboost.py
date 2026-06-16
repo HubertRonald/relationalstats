@@ -158,24 +158,35 @@ def generate_metric_combinations(
     return combinations
 
 
-def _make_xgboost_classifier(random_state: int = 42):
-    """Create an XGBoost classifier with lazy optional import."""
-    try:
-        from xgboost import XGBClassifier
-    except ImportError as exc:
-        raise ImportError(
-            "XGBoost is required for this experimental example. "
-            'Install optional ML dependencies with: python -m pip install -e ".[ml]"'
-        ) from exc
+def _make_classifier(random_state: int = 42, backend: str = "sklearn"):
+    """Create a classifier for the experimental feature-search workflow."""
+    if backend == "xgboost":
+        try:
+            from xgboost import XGBClassifier
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(
+                "XGBoost could not be loaded. On macOS this may require "
+                "the OpenMP runtime, usually `libomp.dylib`. "
+                "Use backend='sklearn' for a pure scikit-learn fallback."
+            ) from exc
 
-    return XGBClassifier(
+        return XGBClassifier(
+            n_estimators=300,
+            max_depth=5,
+            learning_rate=0.05,
+            subsample=0.9,
+            colsample_bytree=0.9,
+            eval_metric="logloss",
+            random_state=random_state,
+        )
+
+    from sklearn.ensemble import RandomForestClassifier
+
+    return RandomForestClassifier(
         n_estimators=300,
         max_depth=5,
-        learning_rate=0.05,
-        subsample=0.9,
-        colsample_bytree=0.9,
-        eval_metric="logloss",
         random_state=random_state,
+        class_weight="balanced",
     )
 
 
@@ -198,7 +209,7 @@ def evaluate_feature_set(
         random_state=cfg.random_state,
     )
 
-    model = _make_xgboost_classifier(random_state=cfg.random_state)
+    model = _make_classifier(random_state=cfg.random_state, backend="sklearn")
     model.fit(x_train, y_train)
 
     probabilities = model.predict_proba(x_test)[:, 1]
@@ -328,11 +339,19 @@ def main() -> None:
     if valid_results.empty:
         print()
         print("No valid feature set was evaluated.")
-        print("This usually means XGBoost is not installed.")
+        print("XGBoost may be missing or its native library could not be loaded.")
         print()
-        print("Install the minimal dependencies with:")
-        print('python -m pip install -e ".[dev,test,plot]"')
-        print("python -m pip install xgboost")
+        print("On macOS, this commonly means the OpenMP runtime is missing.")
+        print()
+        print("MacPorts:")
+        print("sudo port install libomp")
+        print()
+        print("Homebrew:")
+        print("brew install libomp")
+        print()
+        print("Then retry:")
+        print("python -c \"import xgboost; print(xgboost.__version__)\"")
+        print("python examples/linkprediction/ml_feature_search_xgboost.py")
         return
 
     best = valid_results.iloc[0]
