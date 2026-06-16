@@ -323,7 +323,19 @@ def main() -> None:
     print("Top feature sets:")
     print(results.head(10).to_string(index=False))
 
-    best = results.dropna(subset=["auc"]).iloc[0]
+    valid_results = results.dropna(subset=["auc"])
+
+    if valid_results.empty:
+        print()
+        print("No valid feature set was evaluated.")
+        print("This usually means XGBoost is not installed.")
+        print()
+        print("Install the minimal dependencies with:")
+        print('python -m pip install -e ".[dev,test,plot]"')
+        print("python -m pip install xgboost")
+        return
+
+    best = valid_results.iloc[0]
     best_features = list(best["features"])
     best_eval = evaluate_feature_set(df, best_features, config)
 

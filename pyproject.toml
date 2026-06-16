@@ -87,13 +87,19 @@ notebooks = [
 
 ml = [
   "xgboost>=1.7",
-  "shap>=0.44",
   "imbalanced-learn>=0.12",
   "mlxtend>=0.23",
   "scikit-learn-extra>=0.3",
-  "umap-learn>=0.5",
   "gower>=0.1",
   "kneed>=0.8",
+]
+
+explain = [
+  "shap>=0.44",
+]
+
+reduction = [
+  "umap-learn>=0.5",
 ]
 
 community = [
