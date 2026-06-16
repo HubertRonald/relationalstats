@@ -1,7 +1,6 @@
 # Link prediction examples
 
-This directory contains public examples for the `relationalstats.linkprediction`
-module.
+This directory contains public examples for the `relationalstats.linkprediction` module.
 
 The package core lives under:
 
@@ -14,36 +13,50 @@ This examples directory is reserved for optional workflows such as:
 - feature generation;
 - simple supervised link prediction;
 - metric comparison;
-- optional ML experiments;
-- future XGBoost or SHAP demonstrations.
+- optional machine learning experiments;
+- XGBoost-based feature search;
+- SHAP-based model explanation;
+- exploratory plotting.
 
-## Current example
+## Current examples
 
-```bash
+```text
 proxfun_feature_pipeline.py
 ```
 
-This script demonstrates how to:
+Demonstrates how to:
 
 1. Build a small synthetic graph.
 2. Generate positive and negative node pairs.
-3. Compute link prediction features with proxfun_full.
+3. Compute link prediction features with `proxfun_full`.
 4. Train a simple scikit-learn classifier.
 5. Evaluate the feature pipeline with ROC AUC.
 
+```text
+ml_feature_search_xgboost.py
+```
+
+Demonstrates how to:
+
+1. Build a synthetic link prediction dataset.
+2. Generate metric combinations.
+3. Evaluate feature subsets with XGBoost.
+4. Rank feature combinations by ROC AUC.
+5. Optionally plot correlations and AUC distributions.
+6. Optionally explain a fitted tree model with SHAP.
 
 ## Optional ML dependencies
 
-Advanced experiments with XGBoost, SHAP, UMAP, or feature search should not be
-part of the package core.
+Advanced experiments with XGBoost, SHAP, UMAP, or feature search should not be part of the package core.
 
-Install optional ML dependencies only when needed:
+Install optional ML and plotting dependencies only when needed:
 
 ```bash
-python -m pip install -e ".[ml]"
+python -m pip install -e ".[ml,plot]"
 ```
 
 ## Methodological note
 
-These examples are illustrative. They are not intended to claim benchmark-level
-performance or equivalence with R linkprediction.
+These examples are illustrative. They are not intended to claim benchmark-level performance or equivalence with R `linkprediction`.
+
+They are intentionally synthetic and public-safe.
