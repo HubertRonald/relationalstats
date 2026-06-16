@@ -52,8 +52,12 @@ Advanced experiments with XGBoost, SHAP, UMAP, or feature search should not be p
 Install optional ML and plotting dependencies only when needed:
 
 ```bash
-python -m pip install -e ".[ml,plot]"
+python -m pip install -e ".[dev,test,plot]"
 ```
+
+> **NOTE**: XGBoost is optional. On macOS, XGBoost may require the OpenMP runtime
+`libomp.dylib`. The example defaults to a scikit-learn classifier to keep the
+workflow portable.
 
 ## Methodological note
 
