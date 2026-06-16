@@ -385,6 +385,39 @@ fixtures/private/
 Public examples should be rewritten as clean, original, reusable examples that do not expose solved academic assignments.
 
 
+## Examples and experimental workflows
+
+The package core lives under:
+
+```text
+src/relationalstats/
+```
+
+Optional examples and exploratory workflows live under:
+
+```text
+examples/
+```
+
+Solved academic notebooks, private experiments, and raw course material should
+not be committed to this repository. Local-only material should remain under
+ignored paths such as:
+
+```text
+notebooks/legacy/
+notebooks/private/
+scratch/
+experiments/
+```
+
+The first public link prediction example demonstrates how to use
+`proxfun_full` as a feature generator for a simple supervised workflow:
+
+```bash
+python examples/linkprediction/proxfun_feature_pipeline.py
+```
+
+
 ## Author
 
 * **Hubert Ronald** - Initial Work - [HubertRonald](https://github.com/HubertRonald)
