@@ -393,15 +393,53 @@ The package core lives under:
 src/relationalstats/
 ```
 
-Optional examples and exploratory workflows live under:
+Stable and reusable link prediction metrics live under:
+
+```text
+src/relationalstats/linkprediction/
+```
+
+Public examples, optional experiments, and exploratory workflows live under:
 
 ```text
 examples/
 ```
 
-Solved academic notebooks, private experiments, and raw course material should
-not be committed to this repository. Local-only material should remain under
-ignored paths such as:
+For link prediction, public examples live under:
+
+```text
+examples/linkprediction/
+```
+
+Current examples include:
+
+```bash
+python examples/linkprediction/proxfun_feature_pipeline.py
+python examples/linkprediction/ml_feature_search_xgboost.py
+```
+
+The first example demonstrates how to use `proxfun_full` as a feature generator
+for a simple supervised link prediction workflow.
+
+The second example keeps the original exploratory ML direction outside the
+package core. It covers optional ideas such as:
+
+* XGBoost-based feature evaluation;
+* metric-combination search;
+* exploratory feature importance;
+* correlation plots;
+* SHAP-based model explanation.
+
+The XGBoost/SHAP workflow requires optional dependencies:
+
+```bash
+python -m pip install -e ".[ml,plot]"
+```
+
+Solved academic notebooks, private experiments, raw course material, and
+non-public validation work should not be committed to this repository.
+
+Local-only material should remain under ignored paths such as:
 
 ```text
 notebooks/legacy/
@@ -410,12 +448,9 @@ scratch/
 experiments/
 ```
 
-The first public link prediction example demonstrates how to use
-`proxfun_full` as a feature generator for a simple supervised workflow:
+These examples are synthetic, public-safe, and separate from private notebooks or
+academic course material.
 
-```bash
-python examples/linkprediction/proxfun_feature_pipeline.py
-```
 
 
 ## Author
