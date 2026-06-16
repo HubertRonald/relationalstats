@@ -64,3 +64,7 @@ workflow portable.
 These examples are illustrative. They are not intended to claim benchmark-level performance or equivalence with R `linkprediction`.
 
 They are intentionally synthetic and public-safe.
+
+The reported AUC depends on the synthetic graph, sampling strategy, model choice,
+and train/test split. It should be interpreted only as an execution check and
+not as a performance benchmark.

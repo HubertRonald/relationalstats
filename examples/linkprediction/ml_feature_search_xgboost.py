@@ -361,6 +361,10 @@ def main() -> None:
     print()
     print(f"Best features: {best_features}")
     print(f"Best AUC: {best_eval['auc']:.3f}")
+    print()
+    print("Note:")
+    print("This is a synthetic demonstration, not a benchmark.")
+    print("AUC values may vary because the graph and train/test split are small.")
 
     # Optional interactive/visual steps:
     # plot_correlation_heatmap(df, LOCAL_METRICS)
