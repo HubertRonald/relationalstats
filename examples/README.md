@@ -1,4 +1,3 @@
-cat > examples/README.md <<'EOF'
 # Examples
 
 This directory contains public, synthetic, and reusable examples for
