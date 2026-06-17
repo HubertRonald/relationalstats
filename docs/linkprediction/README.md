@@ -1,7 +1,6 @@
 # Link prediction
 
-The `relationalstats.linkprediction` module provides link prediction metrics for
-NetworkX graphs.
+The `relationalstats.linkprediction` module provides link prediction metrics for NetworkX graphs.
 
 The first public implementation includes `proxfun_full`, an extensible Python
 implementation inspired by R `linkprediction::proxfun`.
@@ -36,6 +35,7 @@ result.top_k(k=20, metric="jaccard")
 
 - [Metric formulas](metrics.md)
 - [proxfun_full API notes](proxfun-full.md)
+- [ProxFunResult API notes](results.md)
 - [Scalability notes](scalability.md)
 - [Validation against R](validation-against-r.md)
 
