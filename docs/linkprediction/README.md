@@ -38,6 +38,7 @@ result.top_k(k=20, metric="jaccard")
 - [ProxFunResult API notes](results.md)
 - [Scalability notes](scalability.md)
 - [Validation against R](validation-against-r.md)
+- [Manual small-graph tests](manual-small-graph-tests.md)
 
 ## Scope
 
