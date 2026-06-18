@@ -8,7 +8,7 @@ implementation inspired by R `linkprediction::proxfun`.
 ## Public API
 
 ```python
-from relationalstats.linkprediction import ProxFun, proxfun_full
+from relationalstats.linkprediction import ProxFun, ProxFunResult, proxfun_full
 ```
 
 Functional API:
@@ -36,9 +36,10 @@ result.top_k(k=20, metric="jaccard")
 - [Metric formulas](metrics.md)
 - [proxfun_full API notes](proxfun-full.md)
 - [ProxFunResult API notes](results.md)
+- [Manual small-graph tests](manual-small-graph-tests.md)
+- [Internal refactor notes](internal-refactor.md)
 - [Scalability notes](scalability.md)
 - [Validation against R](validation-against-r.md)
-- [Manual small-graph tests](manual-small-graph-tests.md)
 
 ## Scope
 
@@ -50,8 +51,7 @@ may be expensive for large networks.
 
 ## Methodological note
 
-Metric definitions can vary across packages. Validation against R
-`linkprediction::proxfun` should always align:
+Metric definitions can vary across packages. Validation against R `linkprediction::proxfun` should always align:
 
 - graph direction;
 - node ordering;
