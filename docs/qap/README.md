@@ -24,10 +24,26 @@ result = QAPLogit(
     n_permutations=99,
     random_state=42,
     directed=True,
+    backend="statsmodels",
 ).fit(y, x_matrices)
 
 result.to_dataframe()
 ```
+
+## Backend options
+
+`QAPLogit` supports two logistic-regression backends.
+
+| Backend | Use case | Diagnostics |
+|---|---|---|
+| `statsmodels` | Default backend for richer model diagnostics | coefficients, standard errors, z-values, backend p-values |
+| `sklearn` | Faster regularized backend for larger permutation workflows | coefficients only; diagnostic fields are `NaN` |
+
+Backend p-values are retained only as diagnostics. QAP empirical p-values are
+the primary permutation-based inference output.
+
+For validation against R `sna::netlogit`, prefer the `statsmodels` backend
+because it is closer to a classical logistic-regression workflow.
 
 ## Documentation
 

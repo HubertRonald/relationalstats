@@ -21,6 +21,13 @@ Validation should explicitly align:
 - empirical p-value convention;
 - tolerance for floating-point comparisons.
 
+## Backend note
+
+Use the `statsmodels` backend for R validation.
+
+The `sklearn` backend is useful for faster regularized permutation workflows, but
+it does not expose standard errors, z-values, or model-based p-values.
+
 ## Current status
 
 R validation fixtures are pending.

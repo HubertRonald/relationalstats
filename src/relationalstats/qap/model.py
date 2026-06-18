@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Literal
 
 import numpy as np
 import pandas as pd
 
-from .backends import fit_logit_glm
+from .backends import fit_logit_backend
 from .permutation import (
     dyad_frame,
     empirical_p_values,
@@ -15,6 +16,9 @@ from .permutation import (
     permute_square_matrix,
 )
 from .results import QAPLogitResult
+
+
+QAPLogitBackend = Literal["statsmodels", "statsmodels_glm", "glm", "sklearn", "scikit-learn", "scikit_learn"]
 
 
 def _validate_binary_outcome(y: np.ndarray) -> None:
@@ -41,35 +45,68 @@ class QAPLogit:
         Whether to include self-dyads.
     two_tailed:
         Whether to compute two-tailed empirical p-values.
+    backend:
+        Logistic-regression backend. Use ``"statsmodels"`` for richer
+        diagnostics or ``"sklearn"`` for a faster regularized backend.
     maxiter:
-        Maximum number of iterations for the logistic GLM backend.
+        Maximum number of iterations for the logistic backend.
+    sklearn_C:
+        Inverse regularization strength for the scikit-learn backend.
 
     Notes
     -----
     This is an initial QAP logistic model for binary dyadic outcomes. It uses a
-    standard logistic-regression backend for observed coefficients and repeated
+    logistic-regression backend for observed coefficients and repeated
     node-label permutations of the outcome matrix for QAP empirical p-values.
+
+    Backend p-values are diagnostic only. QAP p-values are the primary
+    permutation-based inference output.
     """
 
     def __init__(
-        self,
-        *,
-        n_permutations: int = 999,
-        random_state: int | None = None,
-        directed: bool = True,
-        include_diagonal: bool = False,
-        two_tailed: bool = True,
-        maxiter: int = 100,
-    ) -> None:
+            self,
+            *,
+            n_permutations: int = 999,
+            random_state: int | None = None,
+            directed: bool = True,
+            include_diagonal: bool = False,
+            two_tailed: bool = True,
+            backend: QAPLogitBackend = "statsmodels",
+            maxiter: int = 100,
+            sklearn_C: float = 1.0,
+        ) -> None:
         if n_permutations < 0:
             raise ValueError("n_permutations must be non-negative.")
+
+        if sklearn_C <= 0:
+            raise ValueError("sklearn_C must be positive.")
+
+        # Validate early so configuration errors fail before fitting.
+        fit_logit_backend.__annotations__
+
+        normalized_backend = backend.lower()
+        allowed = {
+            "statsmodels",
+            "statsmodels_glm",
+            "glm",
+            "sklearn",
+            "scikit-learn",
+            "scikit_learn",
+        }
+        if normalized_backend not in allowed:
+            raise ValueError(
+                "backend must be one of: 'statsmodels', 'statsmodels_glm', "
+                "'glm', 'sklearn', 'scikit-learn', or 'scikit_learn'."
+            )
 
         self.n_permutations = n_permutations
         self.random_state = random_state
         self.directed = directed
         self.include_diagonal = include_diagonal
         self.two_tailed = two_tailed
+        self.backend = backend
         self.maxiter = maxiter
+        self.sklearn_C = sklearn_C
 
     def fit(
         self,
@@ -91,13 +128,20 @@ class QAPLogit:
             include_diagonal=self.include_diagonal,
         )
 
-        x_columns = [column for column in frame.columns if column not in {"source", "target", "y"}]
+        x_columns = [
+            column
+            for column in frame.columns
+            if column not in {"source", "target", "y"}
+        ]
 
-        backend_result = fit_logit_glm(
+        backend_result = fit_logit_backend(
             frame["y"].to_numpy(),
             frame[x_columns],
+            backend=self.backend,
             add_intercept=True,
             maxiter=self.maxiter,
+            sklearn_C=self.sklearn_C,
+            random_state=self.random_state,
         )
 
         permutations = generate_permutations(
@@ -119,11 +163,14 @@ class QAPLogit:
             )
 
             try:
-                permuted_result = fit_logit_glm(
+                permuted_result = fit_logit_backend(
                     permuted_frame["y"].to_numpy(),
                     permuted_frame[x_columns],
+                    backend=self.backend,
                     add_intercept=True,
                     maxiter=self.maxiter,
+                    sklearn_C=self.sklearn_C,
+                    random_state=self.random_state,
                 )
                 permutation_rows.append(permuted_result.coefficients)
             except Exception:
@@ -150,6 +197,7 @@ class QAPLogit:
             n_dyads_=len(frame),
             directed_=self.directed,
             include_diagonal_=self.include_diagonal,
+            backend_=backend_result.backend,
         )
 
         self.result_ = result
@@ -158,9 +206,9 @@ class QAPLogit:
         return result
 
     def fit_dataframe(
-        self,
-        y: np.ndarray,
-        x_matrices: Mapping[str, np.ndarray],
-    ) -> pd.DataFrame:
+            self,
+            y: np.ndarray,
+            x_matrices: Mapping[str, np.ndarray],
+        ) -> pd.DataFrame:
         """Fit the model and return the result table."""
         return self.fit(y, x_matrices).to_dataframe()
