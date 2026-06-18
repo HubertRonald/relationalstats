@@ -1,3 +1,5 @@
+"""Full link prediction metric computation."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
@@ -6,53 +8,17 @@ from dataclasses import dataclass
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.sparse import csr_matrix, diags, eye
+from scipy.sparse import csr_matrix, diags
 from scipy.sparse.csgraph import shortest_path
-from scipy.sparse.linalg import inv
 
+from .metrics import ALL_METRICS, LOCAL_A2_METRICS, safe_divide, validate_metrics
+from .random_walk import random_walk_with_restart_matrix
 from .results import ProxFunResult
-
-
-ALL_METRICS: list[str] = [
-    "common_neighbors",
-    "jaccard",
-    "adamic_adar",
-    "preferential_attachment",
-    "resource_allocation",
-    "salton",
-    "sorensen",
-    "hub_promoted",
-    "hub_depressed",
-    "lhn_local",
-    "shortest_path",
-    "local_path",
-    "katz",
-    "rwr",
-    "degree",
-    "act",
-]
-
-
-LOCAL_A2_METRICS: set[str] = {
-    "common_neighbors",
-    "jaccard",
-    "salton",
-    "sorensen",
-    "hub_promoted",
-    "hub_depressed",
-    "lhn_local",
-    "local_path",
-}
-
-
-GLOBAL_METRICS: set[str] = {
-    "katz",
-    "rwr",
-    "act",
-}
+from .spectral import average_commute_time_scores, katz_matrix
 
 
 def _validate_graph(G: nx.Graph | nx.DiGraph) -> None:
+    """Validate an input graph."""
     if not isinstance(G, (nx.Graph, nx.DiGraph)):
         raise TypeError("G must be a networkx Graph or DiGraph.")
 
@@ -60,30 +26,12 @@ def _validate_graph(G: nx.Graph | nx.DiGraph) -> None:
         raise ValueError("G must contain at least one node.")
 
 
-def _validate_metrics(metrics: Sequence[str]) -> list[str]:
-    unknown = sorted(set(metrics) - set(ALL_METRICS))
-    if unknown:
-        raise ValueError(
-            "Unknown link prediction metric(s): "
-            + ", ".join(unknown)
-            + f". Supported metrics are: {', '.join(ALL_METRICS)}."
-        )
-
-    return list(metrics)
-
-
-def _safe_divide(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
-    numerator = np.asarray(numerator, dtype=float)
-    denominator = np.asarray(denominator, dtype=float)
-    out = np.zeros_like(numerator, dtype=float)
-    return np.divide(numerator, denominator, out=out, where=denominator > 0)
-
-
 def _default_pairs(
     G: nx.Graph | nx.DiGraph,
     *,
     directed: bool,
 ) -> list[tuple[object, object]]:
+    """Return default node pairs to score."""
     nodes = list(G.nodes())
 
     if directed:
@@ -95,6 +43,7 @@ def _default_pairs(
         ]
 
     G_undirected = G.to_undirected()
+
     return list(nx.non_edges(G_undirected))
 
 
@@ -104,6 +53,7 @@ def _prepare_pairs(
     *,
     directed: bool,
 ) -> list[tuple[object, object]]:
+    """Validate and materialize node pairs."""
     if pairs is None:
         return _default_pairs(G, directed=directed)
 
@@ -114,12 +64,7 @@ def _prepare_pairs(
 
     nodes = set(G.nodes())
     missing_nodes = sorted(
-        {
-            node
-            for pair in prepared
-            for node in pair
-            if node not in nodes
-        },
+        {node for pair in prepared for node in pair if node not in nodes},
         key=str,
     )
 
@@ -134,6 +79,7 @@ def _graph_for_scoring(
     *,
     directed: bool,
 ) -> nx.Graph | nx.DiGraph:
+    """Return the graph representation used for scoring."""
     if directed:
         return G.copy()
 
@@ -151,171 +97,141 @@ def proxfun_full(
     beta_katz: float = 0.005,
     rwr_alpha: float = 0.15,
 ) -> pd.DataFrame | dict[str, np.ndarray]:
-    """
-    Compute link prediction scores for selected node pairs.
-
-    Parameters
-    ----------
-    G:
-        Input networkx graph.
-    pairs:
-        Node pairs to score. If None, scores are computed for non-existing edges.
-    metrics:
-        Metrics to compute. If None, all supported metrics are used.
-    directed:
-        If False, scoring is performed on an undirected version of the graph.
-        If True, the adjacency matrix preserves edge direction.
-    return_dataframe:
-        If True, return a pandas DataFrame with source, target and score columns.
-        If False, return a dictionary of arrays.
-    beta_local_path:
-        Beta parameter for the local path index.
-    beta_katz:
-        Beta parameter for the Katz index.
-    rwr_alpha:
-        Restart probability for random walk with restart.
-
-    Notes
-    -----
-    Katz, RWR and ACT are global matrix-based metrics and may be expensive
-    for large networks.
-    """
+    """Compute link prediction scores for selected node pairs."""
     _validate_graph(G)
 
-    if metrics is None:
-        metrics = ALL_METRICS
-
-    metrics = _validate_metrics(metrics)
-
+    selected_metrics = validate_metrics(metrics)
     H = _graph_for_scoring(G, directed=directed)
     selected_pairs = _prepare_pairs(H, pairs, directed=directed)
 
     df = pd.DataFrame(selected_pairs, columns=["source", "target"])
 
     if df.empty:
-        return df if return_dataframe else {"source": np.array([]), "target": np.array([])}
+        if return_dataframe:
+            return df
+
+        return {"source": np.array([]), "target": np.array([])}
 
     nodes = list(H.nodes())
     node_to_idx = {node: idx for idx, node in enumerate(nodes)}
-    n = len(nodes)
 
-    u_idx = df["source"].map(node_to_idx).to_numpy()
-    v_idx = df["target"].map(node_to_idx).to_numpy()
+    source_indices = df["source"].map(node_to_idx).to_numpy()
+    target_indices = df["target"].map(node_to_idx).to_numpy()
 
-    A = nx.to_scipy_sparse_array(H, nodelist=nodes, format="csr", dtype=float)
-    A = csr_matrix(A)
+    adjacency = nx.to_scipy_sparse_array(
+        H,
+        nodelist=nodes,
+        format="csr",
+        dtype=float,
+    )
+    adjacency = csr_matrix(adjacency)
 
-    deg = np.asarray(A.sum(axis=1)).ravel()
-    deg_safe = deg.copy()
-    deg_safe[deg_safe == 0] = 1.0
+    degree = np.asarray(adjacency.sum(axis=1)).ravel()
 
-    A2 = None
-    cn = None
+    adjacency_squared = None
+    common_neighbors = None
 
-    if any(metric in metrics for metric in LOCAL_A2_METRICS):
-        A2 = A @ A
-        cn = np.asarray(A2[u_idx, v_idx]).ravel()
+    if any(metric in selected_metrics for metric in LOCAL_A2_METRICS):
+        adjacency_squared = adjacency @ adjacency
+        common_neighbors = np.asarray(
+            adjacency_squared[source_indices, target_indices]
+        ).ravel()
 
-    if "common_neighbors" in metrics:
-        df["common_neighbors"] = cn
+    if "common_neighbors" in selected_metrics:
+        df["common_neighbors"] = common_neighbors
 
-    if "degree" in metrics:
-        df["degree_source"] = deg[u_idx]
-        df["degree_target"] = deg[v_idx]
+    if "degree" in selected_metrics:
+        df["degree_source"] = degree[source_indices]
+        df["degree_target"] = degree[target_indices]
 
-    if "jaccard" in metrics:
-        union = deg[u_idx] + deg[v_idx] - cn
-        df["jaccard"] = _safe_divide(cn, union)
+    if "jaccard" in selected_metrics:
+        union = degree[source_indices] + degree[target_indices] - common_neighbors
+        df["jaccard"] = safe_divide(common_neighbors, union)
 
-    if "adamic_adar" in metrics:
-        weights = np.zeros_like(deg, dtype=float)
-        mask = deg > 1
-        weights[mask] = 1.0 / np.log(deg[mask])
+    if "adamic_adar" in selected_metrics:
+        weights = np.zeros_like(degree, dtype=float)
+        mask = degree > 1
+        weights[mask] = 1.0 / np.log(degree[mask])
 
-        aa_matrix = A @ diags(weights) @ A
-        df["adamic_adar"] = np.asarray(aa_matrix[u_idx, v_idx]).ravel()
+        adamic_adar_matrix = adjacency @ diags(weights) @ adjacency
+        df["adamic_adar"] = np.asarray(
+            adamic_adar_matrix[source_indices, target_indices]
+        ).ravel()
 
-    if "resource_allocation" in metrics:
-        weights = np.zeros_like(deg, dtype=float)
-        mask = deg > 0
-        weights[mask] = 1.0 / deg[mask]
+    if "resource_allocation" in selected_metrics:
+        weights = np.zeros_like(degree, dtype=float)
+        mask = degree > 0
+        weights[mask] = 1.0 / degree[mask]
 
-        ra_matrix = A @ diags(weights) @ A
-        df["resource_allocation"] = np.asarray(ra_matrix[u_idx, v_idx]).ravel()
+        resource_allocation_matrix = adjacency @ diags(weights) @ adjacency
+        df["resource_allocation"] = np.asarray(
+            resource_allocation_matrix[source_indices, target_indices]
+        ).ravel()
 
-    if "preferential_attachment" in metrics:
-        df["preferential_attachment"] = deg[u_idx] * deg[v_idx]
-
-    if "salton" in metrics:
-        denominator = np.sqrt(deg[u_idx] * deg[v_idx])
-        df["salton"] = _safe_divide(cn, denominator)
-
-    if "sorensen" in metrics:
-        denominator = deg[u_idx] + deg[v_idx]
-        df["sorensen"] = _safe_divide(2.0 * cn, denominator)
-
-    if "hub_promoted" in metrics:
-        denominator = np.minimum(deg[u_idx], deg[v_idx])
-        df["hub_promoted"] = _safe_divide(cn, denominator)
-
-    if "hub_depressed" in metrics:
-        denominator = np.maximum(deg[u_idx], deg[v_idx])
-        df["hub_depressed"] = _safe_divide(cn, denominator)
-
-    if "lhn_local" in metrics:
-        denominator = deg[u_idx] * deg[v_idx]
-        df["lhn_local"] = _safe_divide(cn, denominator)
-
-    if "shortest_path" in metrics:
-        dist_matrix = shortest_path(A, directed=directed, unweighted=True)
-        df["shortest_path"] = dist_matrix[u_idx, v_idx]
-
-    if "local_path" in metrics:
-        if A2 is None:
-            A2 = A @ A
-        A3 = A2 @ A
-        local_path_matrix = A2 + beta_local_path * A3
-        df["local_path"] = np.asarray(local_path_matrix[u_idx, v_idx]).ravel()
-
-    if "katz" in metrics:
-        I = eye(n, format="csr", dtype=float)
-        katz_matrix = inv(I - beta_katz * A) - I
-        df["katz"] = np.asarray(katz_matrix[u_idx, v_idx]).ravel()
-
-    if "rwr" in metrics:
-        row_inv_degree = np.zeros_like(deg, dtype=float)
-        mask = deg > 0
-        row_inv_degree[mask] = 1.0 / deg[mask]
-
-        P = diags(row_inv_degree) @ A
-        I = eye(n, format="csr", dtype=float)
-        rwr_matrix = inv(I - (1.0 - rwr_alpha) * P)
-        df["rwr"] = np.asarray(rwr_matrix[u_idx, v_idx]).ravel()
-
-    if "act" in metrics:
-        # ACT is computed using the Moore-Penrose pseudoinverse of the Laplacian.
-        # This is dense and expensive, so it is intentionally kept explicit.
-        L = nx.laplacian_matrix(H.to_undirected(), nodelist=nodes).astype(float)
-        L_plus = np.linalg.pinv(L.toarray())
-        volume = 2.0 * H.to_undirected().number_of_edges()
-
-        commute = volume * (
-            L_plus[u_idx, u_idx]
-            + L_plus[v_idx, v_idx]
-            - 2.0 * L_plus[u_idx, v_idx]
+    if "preferential_attachment" in selected_metrics:
+        df["preferential_attachment"] = (
+            degree[source_indices] * degree[target_indices]
         )
 
-        act = _safe_divide(np.ones_like(commute, dtype=float), commute)
+    if "salton" in selected_metrics:
+        denominator = np.sqrt(degree[source_indices] * degree[target_indices])
+        df["salton"] = safe_divide(common_neighbors, denominator)
 
-        # For disconnected pairs, commute time is not meaningful.
-        H_undirected = H.to_undirected()
-        connected = np.array(
-            [nx.has_path(H_undirected, u, v) for u, v in selected_pairs],
-            dtype=bool,
+    if "sorensen" in selected_metrics:
+        denominator = degree[source_indices] + degree[target_indices]
+        df["sorensen"] = safe_divide(2.0 * common_neighbors, denominator)
+
+    if "hub_promoted" in selected_metrics:
+        denominator = np.minimum(degree[source_indices], degree[target_indices])
+        df["hub_promoted"] = safe_divide(common_neighbors, denominator)
+
+    if "hub_depressed" in selected_metrics:
+        denominator = np.maximum(degree[source_indices], degree[target_indices])
+        df["hub_depressed"] = safe_divide(common_neighbors, denominator)
+
+    if "lhn_local" in selected_metrics:
+        denominator = degree[source_indices] * degree[target_indices]
+        df["lhn_local"] = safe_divide(common_neighbors, denominator)
+
+    if "shortest_path" in selected_metrics:
+        distance_matrix = shortest_path(
+            adjacency,
+            directed=directed,
+            unweighted=True,
         )
-        act[~connected] = 0.0
+        df["shortest_path"] = distance_matrix[source_indices, target_indices]
 
-        df["act"] = act
+    if "local_path" in selected_metrics:
+        if adjacency_squared is None:
+            adjacency_squared = adjacency @ adjacency
+
+        adjacency_cubed = adjacency_squared @ adjacency
+        local_path_matrix = adjacency_squared + beta_local_path * adjacency_cubed
+
+        df["local_path"] = np.asarray(
+            local_path_matrix[source_indices, target_indices]
+        ).ravel()
+
+    if "katz" in selected_metrics:
+        matrix = katz_matrix(adjacency, beta=beta_katz)
+        df["katz"] = np.asarray(matrix[source_indices, target_indices]).ravel()
+
+    if "rwr" in selected_metrics:
+        matrix = random_walk_with_restart_matrix(
+            adjacency,
+            degree,
+            alpha=rwr_alpha,
+        )
+        df["rwr"] = np.asarray(matrix[source_indices, target_indices]).ravel()
+
+    if "act" in selected_metrics:
+        df["act"] = average_commute_time_scores(
+            H,
+            nodes=nodes,
+            pairs=selected_pairs,
+            source_indices=source_indices,
+            target_indices=target_indices,
+        )
 
     if return_dataframe:
         return df
@@ -325,15 +241,7 @@ def proxfun_full(
 
 @dataclass
 class ProxFun:
-    """
-    Estimator-style interface for link prediction scores.
-
-    Examples
-    --------
-    >>> model = ProxFun(metrics=["jaccard", "adamic_adar"])
-    >>> result = model.fit(G)
-    >>> result.to_dataframe()
-    """
+    """Estimator-style interface for link prediction scores."""
 
     metrics: Sequence[str] | None = None
     directed: bool = False
@@ -346,6 +254,7 @@ class ProxFun:
         G: nx.Graph | nx.DiGraph,
         pairs: Iterable[tuple[object, object]] | None = None,
     ) -> ProxFunResult:
+        """Fit the estimator-style scorer and return a result object."""
         scores = proxfun_full(
             G,
             pairs=pairs,
@@ -359,7 +268,11 @@ class ProxFun:
 
         return ProxFunResult(
             scores_=scores,
-            metrics_=list(self.metrics) if self.metrics is not None else list(ALL_METRICS),
+            metrics_=(
+                list(self.metrics)
+                if self.metrics is not None
+                else list(ALL_METRICS)
+            ),
             directed_=self.directed,
         )
 
@@ -368,4 +281,5 @@ class ProxFun:
         G: nx.Graph | nx.DiGraph,
         pairs: Iterable[tuple[object, object]] | None = None,
     ) -> pd.DataFrame:
+        """Fit the scorer and return scores as a DataFrame."""
         return self.fit(G, pairs=pairs).to_dataframe()
