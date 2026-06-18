@@ -107,6 +107,11 @@ def test_average_commute_time_scores_on_path_graph() -> None:
         target_indices=target_indices,
     )
 
+    # For path graph 0 -- 1 -- 2:
+    # volume = 2 * number_of_edges = 4
+    # effective resistance between endpoints = 2
+    # commute_time = 4 * 2 = 8
+    # ACT score = 1 / commute_time = 1 / 8
     assert scores[0] == pytest.approx(1 / 8)
 
 
