@@ -53,7 +53,7 @@ where $P$ is the row-normalized transition matrix.
 Average commute time uses the pseudoinverse of the Laplacian:
 
 $$
-C(u, v) = \operatorname{vol}(G)\left(L^+_{uu} + L^+_{vv} - 2L^+_{uv}\right)
+C(u, v) = \text{vol}(G)\left(L^+_{uu} + L^+_{vv} - 2L^+_{uv}\right)
 $$
 
 This requires dense linear algebra in the current implementation.

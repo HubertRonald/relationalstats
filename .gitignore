@@ -22,7 +22,8 @@ ipython_config.py
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -286,3 +287,5 @@ build/
 .vscode/settings.json
 .vscode/launch.json
 
+# ignore audit
+_audit/
