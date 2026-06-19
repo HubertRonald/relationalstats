@@ -9,8 +9,8 @@ The documentation is organized by module and by methodology.
 
 - [QAP](qap/README.md)
 - [Link prediction](linkprediction/README.md)
-- ERGM: planned experimental documentation
-- STERGM: planned experimental documentation
+- [ERGM approximation](ergm/README.md)
+- [STERGM approximation](stergm/README.md)
 
 ## Methodology
 

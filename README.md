@@ -451,6 +451,13 @@ experiments/
 These examples are synthetic, public-safe, and separate from private notebooks or
 academic course material.
 
+## ERGM and STERGM approximations
+
+`relationalstats` now includes initial ERGM-inspired and STERGM-inspired
+approximations.
+
+These modules are dyadic-logistic approximations, not full MCMC-MLE equivalents
+to R `ergm`, `tergm`, or `stergm`.
 
 
 ## Author
