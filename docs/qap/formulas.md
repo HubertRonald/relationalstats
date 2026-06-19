@@ -6,7 +6,7 @@ For a binary dyadic outcome $Y_{ij}$ and dyadic predictors $X_{ij1}, \dots,
 X_{ijp}$, the model is:
 
 $$
-\Pr(Y_{ij}=1) = \operatorname{logit}^{-1}
+\Pr(Y_{ij}=1) = \text{logit}^{-1}
 \left(\beta_0 + \sum_{k=1}^{p} \beta_k X_{ijk}\right)
 $$
 

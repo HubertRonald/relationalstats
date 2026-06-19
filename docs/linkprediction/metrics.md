@@ -114,7 +114,7 @@ Reduces degree-driven bias in common-neighbor scores.
 ## Shortest path
 
 $$
-d(u, v) = \operatorname{dist}(u, v)
+d(u, v) = \text{dist}(u, v)
 $$
 
 Lower values indicate closer nodes. Disconnected nodes receive infinite distance
@@ -196,7 +196,7 @@ Average commute time is based on the Moore-Penrose pseudoinverse of the graph
 Laplacian.
 
 $$
-C(u, v) = \operatorname{vol}(G)\left(L^+_{uu} + L^+_{vv} - 2L^+_{uv}\right)
+C(u, v) = \text{vol}(G)\left(L^+_{uu} + L^+_{vv} - 2L^+_{uv}\right)
 $$
 
 The implemented score is:
