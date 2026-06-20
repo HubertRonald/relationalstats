@@ -11,12 +11,18 @@ on:
     branches:
       - develop
       - main
+    paths-ignore:
+      - "docs/**"
+      - "examples/**"
+      - "notebooks/**"
+      - "*.md"
+      - "CITATION.cff"
+      - "LICENSE"
 
 jobs:
   test:
     name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
@@ -24,22 +30,19 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
-
+          - "3.13"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-
       - name: Install package with test dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev,test]"
-
       - name: Run tests
         run: |
           pytest -q
