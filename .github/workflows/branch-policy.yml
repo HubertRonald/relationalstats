@@ -1,0 +1,79 @@
+name: Branch policy
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - "release/**"
+
+jobs:
+  branch-policy:
+    name: branch-policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate allowed pull request flow
+        shell: bash
+        run: |
+          BASE="${{ github.base_ref }}"
+          HEAD="${{ github.head_ref }}"
+
+          echo "Base branch: ${BASE}"
+          echo "Head branch: ${HEAD}"
+
+          # ------------------------------------------------------------
+          # PRs targeting develop
+          # Allowed:
+          #   feature/* -> develop
+          #   chore/*   -> develop
+          #   docs/*    -> develop
+          #   fix/*     -> develop
+          # ------------------------------------------------------------
+          if [[ "$BASE" == "develop" ]]; then
+            if [[ "$HEAD" =~ ^feature/.*$ || "$HEAD" =~ ^chore/.*$ || "$HEAD" =~ ^docs/.*$ || "$HEAD" =~ ^fix/.*$ ]]; then
+              echo "Allowed: ${HEAD} -> ${BASE}"
+              exit 0
+            fi
+
+            echo "Blocked: only feature/*, chore/*, docs/* or fix/* branches can target develop."
+            exit 1
+          fi
+
+          # ------------------------------------------------------------
+          # PRs targeting release/*
+          # Allowed:
+          #   develop -> release/vX.Y.Z
+          #   fix/*   -> release/vX.Y.Z
+          #   docs/*  -> release/vX.Y.Z
+          # ------------------------------------------------------------
+          if [[ "$BASE" =~ ^release/.*$ ]]; then
+            if [[ "$HEAD" == "develop" || "$HEAD" =~ ^fix/.*$ || "$HEAD" =~ ^docs/.*$ ]]; then
+              echo "Allowed: ${HEAD} -> ${BASE}"
+              exit 0
+            fi
+
+            echo "Blocked: only develop, fix/* or docs/* branches can target release/*."
+            exit 1
+          fi
+
+          # ------------------------------------------------------------
+          # PRs targeting main
+          # Allowed:
+          #   release/* -> main
+          #   hotfix/*  -> main
+          #
+          # Recommended: do NOT allow feature/* -> main.
+          # ------------------------------------------------------------
+          if [[ "$BASE" == "main" ]]; then
+            if [[ "$HEAD" =~ ^release/.*$ || "$HEAD" =~ ^hotfix/.*$ ]]; then
+              echo "Allowed: ${HEAD} -> ${BASE}"
+              exit 0
+            fi
+
+            echo "Blocked: only release/* or hotfix/* branches can target main."
+            exit 1
+          fi
+
+          echo "No explicit policy matched. Blocking by default."
+          exit 1

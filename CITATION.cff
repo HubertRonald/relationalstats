@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: "relationalstats"
+message: "If you use relationalstats, please cite it using this metadata."
+type: software
+authors:
+  - family-names: "Ronald"
+    given-names: "Mendoza"
+repository-code: "https://github.com/HubertRonald/relationalstats"
+url: "https://github.com/HubertRonald/relationalstats"
+license: "MIT"
+version: "0.1.0a1"
+date-released: "2026-06-15"
+abstract: >-
+  relationalstats is a practical Python toolkit for applied and statistical
+  social network analysis, with research-grade documentation and transparent
+  methodological boundaries.
+keywords:
+  - social-network-analysis
+  - network-science
+  - link-prediction
+  - qap
+  - ergm
+  - stergm
