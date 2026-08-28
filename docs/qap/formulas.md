@@ -6,16 +6,13 @@ For a binary dyadic outcome $Y_{ij}$ and dyadic predictors $X_{ij1}, \dots,
 X_{ijp}$, the model is:
 
 $$
-\Pr(Y_{ij}=1) = \text{logit}^{-1}
-\left(\beta_0 + \sum_{k=1}^{p} \beta_k X_{ijk}\right)
+\Pr(Y_{ij}=1) = \mathrm{logit}^{-1} \left(\beta_0 + \sum_{k=1}^{p} \beta_k X_{ijk}\right)
 $$
 
 Equivalently:
 
 $$
-\log\left(\frac{\Pr(Y_{ij}=1)}{1 - \Pr(Y_{ij}=1)}\right)
-=
-\beta_0 + \sum_{k=1}^{p} \beta_k X_{ijk}
+\log\left(\frac{\Pr(Y_{ij}=1)}{1 - \Pr(Y_{ij}=1)}\right) = \beta_0 + \sum_{k=1}^{p} \beta_k X_{ijk}
 $$
 
 ## Dyad extraction
@@ -50,10 +47,7 @@ outcome to obtain a permutation distribution of coefficients.
 The initial implementation uses a plus-one empirical p-value:
 
 $$
-p =
-\frac{1 + \sum_{b=1}^{B}
-\mathbb{I}\left(|T_b| \ge |T_{obs}|\right)}
-{B + 1}
+p = \frac{1 + \sum_{b=1}^{B} \mathbb{I}\left(|T_b| \ge |T_{obs}|\right)} {B + 1}
 $$
 
 where:
