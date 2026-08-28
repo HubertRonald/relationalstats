@@ -50,12 +50,7 @@ $$
 The fitted dyadic-logistic approximation is:
 
 $$
-\Pr(F_{ij,t+1}=1 \mid Y_{ij,t}=0)
-=
-\text{logit}^{-1}
-\left(
-\sum_{k=1}^{p} \beta^{F}_{k} x^{F}_{ijk,t}
-\right)
+\Pr(F_{ij,t+1}=1 \mid Y_{ij,t}=0) = \mathrm{logit}^{-1} \left( \sum_{k=1}^{p} \beta^{F}_{k} x^{F}_{ijk,t} \right)
 $$
 
 ## Dissolution risk set
@@ -75,12 +70,7 @@ $$
 The fitted dyadic-logistic approximation is:
 
 $$
-\Pr(D_{ij,t+1}=1 \mid Y_{ij,t}=1)
-=
-\text{logit}^{-1}
-\left(
-\sum_{k=1}^{p} \beta^{D}_{k} x^{D}_{ijk,t}
-\right)
+\Pr(D_{ij,t+1}=1 \mid Y_{ij,t}=1) = \mathrm{logit}^{-1} \left( \sum_{k=1}^{p} \beta^{D}_{k} x^{D}_{ijk,t} \right)
 $$
 
 ## Next-period simulation
@@ -90,39 +80,25 @@ A simulated next-period graph starts from `G_t`.
 For existing ties, dissolution is sampled from:
 
 $$
-D_{ij,t+1}
-\sim
-\text{Bernoulli}(p^{D}_{ij})
+D_{ij,t+1} \sim \mathrm{Bernoulli}(p^{D}_{ij})
 $$
 
 For absent ties, formation is sampled from:
 
 $$
-F_{ij,t+1}
-\sim
-\text{Bernoulli}(p^{F}_{ij})
+F_{ij,t+1} \sim \mathrm{Bernoulli}(p^{F}_{ij})
 $$
 
 where:
 
 $$
-p^{D}_{ij}
-=
-\text{logit}^{-1}
-\left(
-\sum_{k=1}^{p} \beta^{D}_{k} x^{D}_{ijk,t}
-\right)
+p^{D}_{ij} = \mathrm{logit}^{-1} \left( \sum_{k=1}^{p} \beta^{D}_{k} x^{D}_{ijk,t} \right)
 $$
 
 and:
 
 $$
-p^{F}_{ij}
-=
-\text{logit}^{-1}
-\left(
-\sum_{k=1}^{p} \beta^{F}_{k} x^{F}_{ijk,t}
-\right)
+p^{F}_{ij} = \mathrm{logit}^{-1} \left( \sum_{k=1}^{p} \beta^{F}_{k} x^{F}_{ijk,t} \right)
 $$
 
 ## Scope note
